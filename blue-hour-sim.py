@@ -31,6 +31,20 @@ sensors = [SENSOR_ONE, SENSOR_TWO, SENSOR_THREE, SENSOR_FOUR]
 upslope = range(255)
 downslope = list(reversed(upslope))
 color_trails = [upslope, [0] * 255, downslope]
+R=0
+G=1
+B=2
+
+frames = [0, -200, -400]
+targets = [0, -200, -400]
+
+top_target = -400
+middle_target = -200
+bottom_target = 0
+
+top_frame = -400
+middle_frame = -200
+bottom_frame = 0
 
 def setup():
 	pygame.draw.rect(screen, WHITE, SENSOR_ONE)
@@ -40,9 +54,6 @@ def setup():
 	pygame.draw.rect(screen, TOP_COLOR, TOP_CUBE)
 	pygame.draw.rect(screen, MIDDLE_COLOR, MIDDLE_CUBE)
 	pygame.draw.rect(screen, BOTTOM_COLOR, BOTTOM_CUBE)
-
-def updateCubeColors():
-	pygame.draw.rect(screen, BOTTOM_COLOR + pygame.Color(loops,0,0), BOTTOM_CUBE)
 
 def redrawTrail(current_step):
 	pygame.draw.rect(screen, BLACK, (100, 740, 255, 200))
@@ -54,18 +65,20 @@ def redrawTrail(current_step):
 	for step, val in enumerate(color_trails[2]):
 		pygame.draw.circle(screen, BLUE, (100 + step, 900 - val/10), 1)
 	for step in range(255):
-		pygame.draw.circle(screen, pygame.Color(color_trails[0][step], color_trails[1][step], color_trails[2][step]), (100 + step, 750), 1)
+		pygame.draw.circle(screen, pygame.Color(color_trails[R][step], color_trails[G][step], color_trails[B][step]), (100 + step, 750), 1)
 
+def moveFrames(frames, targets):
+	frames[0] = frames[0] + (targets[0]-frames[0])/100
+	return frames
 
 setup()
 
-loops = 0
-
-print color_trails[0][0]
-print color_trails[1][0]
-print color_trails[2][0]
+FPS = 10
+clock = pygame.time.Clock()
 
 while True:
+	milliseconds = clock.tick(FPS)
+	print(milliseconds)
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT: sys.exit()
 		if event.type == pygame.MOUSEBUTTONUP:
@@ -74,11 +87,9 @@ while True:
 			for sensor in sensors:
 				if sensor.collidepoint(pos):
 					print('triggered')
-					loops = 200
-	if loops > 0:
-		loops-=1
-#		updateCubeColors()
-        pygame.draw.rect(screen, pygame.Color(color_trails[0][loops], color_trails[1][loops], color_trails[2][loops]), BOTTOM_CUBE)
+					targets[0] += 200
+	pygame.draw.rect(screen, pygame.Color(color_trails[R][frames[0]], color_trails[G][frames[0]], color_trails[B][frames[0]]), BOTTOM_CUBE)
+	frames = moveFrames(frames, targets)
+	print frames
 	pygame.display.flip()
-	time.sleep(0.03)
-	redrawTrail(loops)
+	redrawTrail(frames[0])
