@@ -1,12 +1,20 @@
 upslope = Array.from(new Array(255), (x,i) => i);
-flat = Array.from(new Array(255), (x,i) => 0);
+everything = Array.from(new Array(255), (x,i) => 255);
+nothing = Array.from(new Array(255), (x,i) => 0);
 downslope = Array.from(new Array(255), (x,i) => 255 - i);
-color_trails = [upslope, flat, downslope];
-R=0;
-G=1;
-B=2;
+color_trails = [nothing.concat(upslope), nothing.concat(nothing), everything.concat(downslope)];
 
-current_step = 0;
+const R=0;
+const G=1;
+const B=2;
+
+frames = [0, 100, 200];
+targets = [0, 100, 200];
+homePositions = [0, 100, 200];
+
+/*const TOP = 0;
+const MIDDLE = 1;
+const BOTTOM = 2;*/
 
 const SENSOR_ONE_X = 340;
 const SENSOR_ONE_Y = 500;
@@ -26,52 +34,65 @@ function drawTower() {
 
 function drawSensors() {
     fill('white');
-    var SENSOR_ONE = ellipse(SENSOR_ONE_X, SENSOR_ONE_Y, 20, 20);
-    var SENSOR_TWO = ellipse(SENSOR_TWO_X, SENSOR_TWO_Y, 20, 20);
-    var SENSOR_THREE = ellipse(SENSOR_THREE_X, SENSOR_THREE_Y, 20, 20);
-    var SENSOR_FOUR = ellipse(SENSOR_FOUR_X, SENSOR_FOUR_Y, 20, 20);
+    ellipse(SENSOR_ONE_X, SENSOR_ONE_Y, 20, 20);
+    ellipse(SENSOR_TWO_X, SENSOR_TWO_Y, 20, 20);
+    ellipse(SENSOR_THREE_X, SENSOR_THREE_Y, 20, 20);
+    ellipse(SENSOR_FOUR_X, SENSOR_FOUR_Y, 20, 20);
 }
 
-function drawTrail(current_step) {
+function drawTrail() {
     fill('BLACK');
-    rect(100, 740, 255, 200);
+    rect(0, 600, 1000, 200);
 
     stroke('WHITE');
-    line(100 + current_step, 600, 100 + current_step, 650);
+    line(50 + frames[0], 600, 50 + frames[0], 650);
+    line(50 + frames[1], 600, 50 + frames[1], 650);
+    line(50 + frames[2], 600, 50 + frames[2], 650);
 
     stroke('RED');
     color_trails[R].forEach(function (item, index, array) {
-        point(100 + index, 650 - item/10);
+        point(50 + index, 650 - item/10);
     });
 
     stroke('GREEN');
     color_trails[G].forEach(function (item, index, array) {
-        point(100 + index, 650 - item/10);
+        point(50 + index, 650 - item/10);
     });
 
     stroke('BLUE');
     color_trails[B].forEach(function (item, index, array) {
-        point(100 + index, 650 - item/10);
+        point(50 + index, 650 - item/10);
     });
 
     for (var step in color_trails[R]) {
         stroke(color(color_trails[R][step], color_trails[G][step], color_trails[B][step]));
-        point(100 + int(step), 600);
+        point(50 + int(step), 600);
     }
 }
 
 function mouseClicked() {
+    var motion = false;
+
     if(dist(mouseX, mouseY, SENSOR_ONE_X, SENSOR_ONE_Y) < 10){
         console.log('sensor 1 triggered');
+        motion = true;
     }
     if(dist(mouseX, mouseY, SENSOR_TWO_X, SENSOR_TWO_Y) < 10){
         console.log('sensor 2 triggered');
+        motion = true;
     }
     if(dist(mouseX, mouseY, SENSOR_THREE_X, SENSOR_THREE_Y) < 10){
         console.log('sensor 3 triggered');
+        motion = true;
     }
     if(dist(mouseX, mouseY, SENSOR_FOUR_X, SENSOR_FOUR_Y) < 10){
         console.log('sensor 4 triggered');
+        motion = true;
+    }
+    if(motion) {
+        targets.forEach(function (item, index, array) {
+            targets[index] = item + 150;
+        });
     }
 }
 
@@ -81,9 +102,26 @@ function setup() {
     noStroke(); 
     background(0);
     drawSensors();
+    drawTower();
 }
 
 function draw() {
-    drawTower();
-    drawTrail(current_step);
+    drawTrail();
+    targets.forEach(function (item, index, array) {
+        if (item > homePositions[index]) {
+            targets[index] = item - 2;
+        };
+    });
+    frames.forEach(function (item, index, array) {
+        frames[index] = item + (targets[index] - item)/10; 
+    });
+    noStroke();
+    fill(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
+    rect(450, 150, 100, 100);
+    fill(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
+    rect(450, 260, 100, 100);
+    fill(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
+    rect(450, 370, 100, 100);
+
+
 }
