@@ -70,6 +70,32 @@ function drawTrail() {
     }
 }
 
+function approachTargets(t, f) {
+    f.forEach(function (item, index, array) {
+        f[index] = item + (t[index] - item)/10; 
+    });
+    return f;
+}
+
+function decayTargets(t, h) {
+    t.forEach(function (item, index, array) {
+        if (item > h[index]) {
+            t[index] = item - 2;
+        };
+    });
+    return t;
+}
+
+function drawTargetApproach() {
+    stroke('WHITE');
+    for(var i=100; i>0; i--) {
+        var t = [[i], [i], [i]];
+        var f = [[0], [0], [0]];
+        f = approachTargets(t, f);
+        point(i, 100-f[0]);
+    }
+}
+
 function mouseClicked() {
     var motion = false;
 
@@ -107,14 +133,9 @@ function setup() {
 
 function draw() {
     drawTrail();
-    targets.forEach(function (item, index, array) {
-        if (item > homePositions[index]) {
-            targets[index] = item - 2;
-        };
-    });
-    frames.forEach(function (item, index, array) {
-        frames[index] = item + (targets[index] - item)/10; 
-    });
+    targets = decayTargets(targets, homePositions);
+    frames = approachTargets(targets, frames);
+    drawTargetApproach();
     noStroke();
     fill(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
     rect(450, 150, 100, 100);
