@@ -11,7 +11,9 @@ const B=2;
 frames = [0, 100, 200];
 targets = [0, 100, 200];
 homePositions = [0, 100, 200];
+
 eventTotal = 0;
+shyRobotTimeoutID = 0;
 
 /*const TOP = 0;
 const MIDDLE = 1;
@@ -98,6 +100,9 @@ function drawTargetApproach() {
 }
 
 function mouseClicked() {
+    clearTimeout(shyRobotTimeoutID);
+    shyRobotTimeoutID = setTimeout(shyRobot, 5000);
+
     var motion = false;
     eventTotal = eventTotal + 1;
 
@@ -150,11 +155,33 @@ function constructMorseString() {
     return morse;
 }
 
-function drawShyRobotStuff() {
+function drawShyRobotData() {
     fill('white');
     textSize(20);
     text(eventTotal, 10, 750);
     text(constructMorseString(), 10, 775);
+}
+
+function shyRobot() {
+    var morse = constructMorseString();
+    if ( typeof shyRobot.MorseIndex == 'undefined' ) {
+        shyRobot.MorseIndex = 0;
+    }
+    if(morse[shyRobot.MorseIndex] == '1') {
+        dit();
+    } else {
+        dah();
+    }
+    shyRobot.MorseIndex++;
+    shyRobotTimeoutID = setTimeout(shyRobot, 1000);
+}
+
+function dit() {
+    console.log('dit');
+}
+
+function dah() {
+    console.log('dah');
 }
 
 function setup() {
@@ -164,6 +191,7 @@ function setup() {
     background(0);
     drawSensors();
     drawTower();
+    shyRobotTimeoutID = setTimeout(shyRobot, 5000);
 }
 
 function draw() {
@@ -178,6 +206,5 @@ function draw() {
     rect(450, 260, 100, 100);
     fill(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
     rect(450, 370, 100, 100);
-    drawShyRobotStuff();
-
+    drawShyRobotData();
 }
