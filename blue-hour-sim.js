@@ -11,6 +11,7 @@ const B=2;
 frames = [0, 100, 200];
 targets = [0, 100, 200];
 homePositions = [0, 100, 200];
+eventTotal = 0;
 
 /*const TOP = 0;
 const MIDDLE = 1;
@@ -98,6 +99,7 @@ function drawTargetApproach() {
 
 function mouseClicked() {
     var motion = false;
+    eventTotal = eventTotal + 1;
 
     if(dist(mouseX, mouseY, SENSOR_ONE_X, SENSOR_ONE_Y) < 10){
         console.log('sensor 1 triggered');
@@ -122,6 +124,39 @@ function mouseClicked() {
     }
 }
 
+function translateToMorse(digit) {
+    switch(digit) {
+        case 0: return '00000';
+        case 1: return '10000';
+        case 2: return '11000';
+        case 3: return '11100';
+        case 4: return '11110';
+        case 5: return '11111';
+        case 6: return '01111';
+        case 7: return '00111';
+        case 8: return '00011';
+        case 9: return '00001';
+    }
+}
+
+function constructMorseString() {
+    var morse = '';
+    morse = morse.concat(translateToMorse(eventTotal % 10));
+    if(eventTotal > 10) {
+        morse = 'L'.concat(morse);
+        morse = translateToMorse(int(eventTotal/10)).concat(morse);
+    }
+    morse = morse.concat('W');
+    return morse;
+}
+
+function drawShyRobotStuff() {
+    fill('white');
+    textSize(20);
+    text(eventTotal, 10, 750);
+    text(constructMorseString(), 10, 775);
+}
+
 function setup() {
     createCanvas(1000, 800);
     frameRate(10)
@@ -143,6 +178,6 @@ function draw() {
     rect(450, 260, 100, 100);
     fill(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
     rect(450, 370, 100, 100);
-
+    drawShyRobotStuff();
 
 }
