@@ -19,13 +19,13 @@ shyRobotTimeoutID = 0;
 const MIDDLE = 1;
 const BOTTOM = 2;*/
 
-const SENSOR_ONE_X = 340;
+const SENSOR_ONE_X = 350;
 const SENSOR_ONE_Y = 500;
-const SENSOR_TWO_X = 440;
+const SENSOR_TWO_X = 450;
 const SENSOR_TWO_Y = 550;
-const SENSOR_THREE_X = 540;
+const SENSOR_THREE_X = 550;
 const SENSOR_THREE_Y = 550;
-const SENSOR_FOUR_X = 640;
+const SENSOR_FOUR_X = 650;
 const SENSOR_FOUR_Y = 500;
 
 function drawTower() {
@@ -100,11 +100,7 @@ function drawTargetApproach() {
 }
 
 function mouseClicked() {
-    clearTimeout(shyRobotTimeoutID);
-    shyRobotTimeoutID = setTimeout(shyRobot, 5000);
-
     var motion = false;
-    eventTotal = eventTotal + 1;
 
     if(dist(mouseX, mouseY, SENSOR_ONE_X, SENSOR_ONE_Y) < 10){
         console.log('sensor 1 triggered');
@@ -126,6 +122,9 @@ function mouseClicked() {
         targets.forEach(function (item, index, array) {
             targets[index] = item + 150;
         });
+        eventTotal = eventTotal + 1;
+        clearTimeout(shyRobotTimeoutID);
+        shyRobotTimeoutID = setTimeout(shyRobot, 5000);
     }
 }
 
@@ -163,6 +162,7 @@ function drawShyRobotData() {
 }
 
 function shyRobot() {
+    console.log("Shy robot emerging.");
     var morse = constructMorseString();
     if ( typeof shyRobot.MorseIndex == 'undefined' ) {
         shyRobot.MorseIndex = 0;
@@ -173,15 +173,52 @@ function shyRobot() {
         dah();
     }
     shyRobot.MorseIndex++;
+    if(shyRobot.MorseIndex == morse.length) {
+        shyRobot.MorseIndex = 0;
+    }
     shyRobotTimeoutID = setTimeout(shyRobot, 1000);
 }
 
 function dit() {
-    console.log('dit');
+    if ( typeof dit.targetColor == 'undefined' ) {
+        dit.nextColor = color('blue');
+    }
+    setIntervalX(function () {
+        drawTopCube(dit.nextColor)
+        dit.nextColor = dit.nextColor - (0,0,20);
+    }, 100, 5);
 }
 
 function dah() {
     console.log('dah');
+}
+
+function drawTopCube(color) {
+    noStroke();
+    fill(color);
+    rect(450, 150, 100, 100);
+}
+
+function drawMiddleCube(color) {
+    noStroke();
+    fill(color);
+    rect(450, 260, 100, 100);
+}
+
+function drawBottomCube(color) {
+    noStroke();
+    fill(color);
+    rect(450, 370, 100, 100);
+}
+
+function setIntervalX(callback, delay, repetitions) {
+    var x = 0;
+    var intervalID = setInterval(function () {
+       callback();
+       if (++x === repetitions) {
+           clearInterval(intervalID);
+       }
+    }, delay);
 }
 
 function setup() {
@@ -199,12 +236,8 @@ function draw() {
     targets = decayTargets(targets, homePositions);
     frames = approachTargets(targets, frames);
     drawTargetApproach();
-    noStroke();
-    fill(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
-    rect(450, 150, 100, 100);
-    fill(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
-    rect(450, 260, 100, 100);
-    fill(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
-    rect(450, 370, 100, 100);
+    drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
+    drawMiddleCube(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
+    drawBottomCube(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
     drawShyRobotData();
 }
