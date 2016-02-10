@@ -223,19 +223,19 @@ function dah() {
 function drawTopCube(color) {
     noStroke();
     fill(color);
-    rect(450, 150, 100, 100);
+    rect(400, 100, 200, 160);
 }
 
 function drawMiddleCube(color) {
     noStroke();
     fill(color);
-    rect(450, 260, 100, 100);
+    rect(400, 260, 200, 160);
 }
 
 function drawBottomCube(color) {
     noStroke();
     fill(color);
-    rect(450, 370, 100, 100);
+    rect(400, 420, 200, 160);
 }
 
 function setIntervalX(callback, delay, repetitions) {
@@ -250,9 +250,9 @@ function setIntervalX(callback, delay, repetitions) {
 
 function setup() {
     createCanvas(1000, 800);
-    frameRate(10)
-    noStroke(); 
     background(0);
+    frameRate(10);
+    noStroke(); 
     drawSensors();
     drawTower();
     drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
