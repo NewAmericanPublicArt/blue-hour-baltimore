@@ -89,6 +89,14 @@ function decayTargets(t, h) {
     return t;
 }
 
+function cubesStillChanging() {
+    if (targets[0] - homePositions[0] > 1) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 function drawTargetApproach() {
     stroke('WHITE');
     for(var i=100; i>0; i--) {
@@ -123,8 +131,6 @@ function mouseClicked() {
             targets[index] = item + 150;
         });
         eventTotal = eventTotal + 1;
-        clearTimeout(shyRobotTimeoutID);
-        shyRobotTimeoutID = setTimeout(shyRobot, 5000);
     }
 }
 
@@ -176,21 +182,42 @@ function shyRobot() {
     if(shyRobot.MorseIndex == morse.length) {
         shyRobot.MorseIndex = 0;
     }
-    shyRobotTimeoutID = setTimeout(shyRobot, 1000);
 }
 
 function dit() {
-    if ( typeof dit.targetColor == 'undefined' ) {
+    console.log('dit');
+    if ( typeof dit.nextColor == 'undefined' ) {
         dit.nextColor = color('blue');
     }
     setIntervalX(function () {
-        drawTopCube(dit.nextColor)
-        dit.nextColor = dit.nextColor - (0,0,20);
+        drawTopCube(dit.nextColor);
+        dit.nextColor = lerpColor(dit.nextColor, color('white'), 0.5);
     }, 100, 5);
+    setTimeout(function () {
+        setIntervalX(function () {
+            drawTopCube(dit.nextColor);
+            dit.nextColor = lerpColor(dit.nextColor, color('blue'), 0.5);
+        }, 100, 5);
+    }, 700);
+    shyRobotTimeoutID = setTimeout(shyRobot, 2200); // call shyRobot again after dit ends: 700 + 500 + 1000 = 2200 
 }
 
 function dah() {
     console.log('dah');
+    if ( typeof dah.nextColor == 'undefined' ) {
+        dah.nextColor = color('blue');
+    }
+    setIntervalX(function () {
+        drawTopCube(dah.nextColor);
+        dah.nextColor = lerpColor(dah.nextColor, color('white'), 0.5);
+    }, 100, 5);
+    setTimeout(function () {
+        setIntervalX(function () {
+            drawTopCube(dah.nextColor);
+            dah.nextColor = lerpColor(dah.nextColor, color('blue'), 0.5);
+        }, 100, 5);
+    }, 2000);
+    shyRobotTimeoutID = setTimeout(shyRobot, 3000); // call shyRobot again after dah ends: 2000 + 500 + 1000 = 3500
 }
 
 function drawTopCube(color) {
@@ -228,6 +255,9 @@ function setup() {
     background(0);
     drawSensors();
     drawTower();
+    drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
+    drawMiddleCube(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
+    drawBottomCube(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
     shyRobotTimeoutID = setTimeout(shyRobot, 5000);
 }
 
@@ -236,8 +266,13 @@ function draw() {
     targets = decayTargets(targets, homePositions);
     frames = approachTargets(targets, frames);
     drawTargetApproach();
-    drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
-    drawMiddleCube(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
-    drawBottomCube(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
+    if(cubesStillChanging()) {
+        clearTimeout(shyRobotTimeoutID); // shy robot hides when cubes are changing
+        shyRobotTimeoutID = setTimeout(shyRobot, 5000); // motion stopped, so prepare shy robot
+        console.log("Delay shy robot");
+        drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
+        drawMiddleCube(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
+        drawBottomCube(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));           
+    }
     drawShyRobotData();
 }
