@@ -27,9 +27,13 @@
 #define TRUE 1
 #define FALSE 0
 
+#define TOO_SOON 2000
+
 #define TOP_CUBE 2
 #define MIDDLE_CUBE 1
 #define BOTTOM_CUBE 0
+
+#define MAX_FRAME 767.0
 
 int red_trail[768] = {0};
 int green_trail[768] = {0};
@@ -68,7 +72,7 @@ void approachTargets() {
 void decayTargets() {
     for(int i=0; i<3; i++) {
         if(targets[i] > homePositions[i]) {
-            targets[i] = targets[i] - 2.0;
+            targets[i] = max(0.0, targets[i] - 4.0);
         }
     }
 }
@@ -81,22 +85,31 @@ char cubesStillChanging() {
     }
 }
 
+char tooSoon(unsigned long lastEvent) {
+    if(millis() - lastEvent < TOO_SOON){
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
 void checkSensors() {
-    static char oldMotion = FALSE;
+    static unsigned long lastEvent = 0;
 
     if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
-        if(oldMotion == TRUE) {
-            return; // do nothing, as we're mid-motion
-        } else { // oldMotion has ended, but we have new motion            
-            oldMotion = TRUE;
+        if(tooSoon(lastEvent)) {
+            return; // do nothing, as we recently counted an event
+        } else {
             eventTotal = eventTotal + 1;
             for(int i=0; i<3; i++) {
                 targets[i] = targets[i] + 150.0;
+                /*if(targets[i] > MAX_FRAME) {
+                    targets[i] = MAX_FRAME;
+                }*/
             }
         }
-    } else {
-        oldMotion = FALSE;
     }
+    lastEvent = millis(); // save for next time this function is called
 }
 
 void translateToMorse(int digit, char *buf) {
