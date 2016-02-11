@@ -27,60 +27,76 @@
 #define TRUE 1
 #define FALSE 0
 
-/*upslope = Array.from(new Array(255), (x,i) => i);
-everything = Array.from(new Array(255), (x,i) => 255);
-nothing = Array.from(new Array(255), (x,i) => 0);
-downslope = Array.from(new Array(255), (x,i) => 255 - i);
-color_trails = [nothing.concat(upslope), nothing.concat(nothing), everything.concat(downslope)];
+#define TOP_CUBE 2
+#define MIDDLE_CUBE 1
+#define BOTTOM_CUBE 0
 
-const R=0;
-const G=1;
-const B=2; */
+int red_trail[768] = {0};
+int green_trail[768] = {0};
+int blue_trail[768] = {0};
 
-int frames[3] = {0, 100, 200};
-int targets[3] = {0, 100, 200};
-int homePositions[3] = {0, 100, 200};
+float frames[3] = {0.0, 100.0, 200.0};
+float targets[3] = {0.0, 100.0, 200.0};
+float homePositions[3] = {0.0, 100.0, 200.0};
 
 int eventTotal = 0;
 
-void approachTargets(char *t, char *f) {
-/*    f.forEach(function (item, index, array) {
-        f[index] = item + (t[index] - item)/10; 
-    });
-    return f; */
+void loadColorTrails() {
+    for(int i=0; i<256; i++) {
+        red_trail[i] = 0;
+        green_trail[i] = 0;
+        blue_trail[i] = 255;
+    }
+    for(int i=256; i<511; i++) {
+        red_trail[i] = i-255;
+        green_trail[i] = 0;
+        blue_trail[i] = 511-i;
+    }
+    for(int i=511; i<768; i++) {
+        red_trail[i] = 255;
+        green_trail[i] = 0;
+        blue_trail[i] = 0;
+    }
 }
 
-void decayTargets(char *t, char *h) {
-/*    t.forEach(function (item, index, array) {
-        if (item > h[index]) {
-            t[index] = item - 2;
-        };
-    });
-    return t;*/
+void approachTargets() {
+    for(int i=0; i<3; i++) {
+        frames[i] = frames[i] + (targets[i] - frames[i])/10.0;
+    }
+}
+
+void decayTargets() {
+    for(int i=0; i<3; i++) {
+        if(targets[i] > homePositions[i]) {
+            targets[i] = targets[i] - 2.0;
+        }
+    }
 }
 
 char cubesStillChanging() {
-    if (targets[0] - homePositions[0] > 1) {
+    if (targets[0] - homePositions[0] > 1.0) {
         return TRUE;
     } else {
         return FALSE;
     }
 }
 
-char sensorTriggered() {
-    char motion = FALSE;
+void checkSensors() {
+    static char oldMotion = FALSE;
 
     if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
-        motion = TRUE;
+        if(oldMotion == TRUE) {
+            return; // do nothing, as we're mid-motion
+        } else { // oldMotion has ended, but we have new motion            
+            oldMotion = TRUE;
+            eventTotal = eventTotal + 1;
+            for(int i=0; i<3; i++) {
+                targets[i] = targets[i] + 150.0;
+            }
+        }
+    } else {
+        oldMotion = FALSE;
     }
-    /* need to move targets and count events here */
-    /* if(motion) {
-        targets.forEach(function (item, index, array) {
-            targets[index] = item + 150;
-        });
-        eventTotal = eventTotal + 1;
-    } */
-    return motion;
 }
 
 void translateToMorse(int digit, char *buf) {
@@ -193,6 +209,10 @@ void setup() {
     pinMode(SENSOR_TWO, INPUT);
     pinMode(SENSOR_THREE, INPUT);
     pinMode(SENSOR_FOUR, INPUT);
+    setTopCube(0,0,255);
+    setMiddleCube(0,0,255);
+    setBottomCube(0,0,255);
+    loadColorTrails();
     Serial.begin(9600);
 
 /*    drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
@@ -202,33 +222,24 @@ void setup() {
 }
 
 void loop() {
-    int brightness = 125;
-    int count;
-    /* Simple loop to ramp up brightness */
-    for (count = 0; count <= 255; count++) {
-        if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
-            Serial.println("Motion detected");
-            DmxSimple.write(4, brightness + 110);
-            DmxSimple.write(5, brightness + 110);
-            DmxSimple.write(6, brightness);
-        } else {
-            Serial.println("xxxxxxx");
-            DmxSimple.write(4, brightness);
-            DmxSimple.write(5, brightness + 110);
-            DmxSimple.write(6, brightness + 110);
-        }
-        /* Small delay to slow down the ramping */
-        delay(50);
-    }
-
-/*    targets = decayTargets(targets, homePositions);
-    frames = approachTargets(targets, frames);
+/*    if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
+        Serial.println("Motion detected acccch");
+        setTopCube(128,0,0);
+    } else {
+        Serial.println("xxxxxxx");
+        setTopCube(0,0,128);
+    }*/
+    checkSensors();
+    decayTargets();
+    approachTargets();
+    Serial.print("Targets: [");
+    Serial.print(targets[0]);
+    Serial.print("]\n");
+    Serial.print(eventTotal);
     if(cubesStillChanging()) {
-        clearTimeout(shyRobotTimeoutID); // shy robot hides when cubes are changing
-        shyRobotTimeoutID = setTimeout(shyRobot, 5000); // motion stopped, so prepare shy robot
-        console.log("Delay shy robot");
-        drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
-        drawMiddleCube(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
-        drawBottomCube(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));           
-    } */
+        setTopCube(red_trail[int(frames[TOP_CUBE])], green_trail[int(frames[TOP_CUBE])], blue_trail[int(frames[TOP_CUBE])]);
+        setMiddleCube(red_trail[int(frames[MIDDLE_CUBE])], green_trail[int(frames[MIDDLE_CUBE])], blue_trail[int(frames[MIDDLE_CUBE])]);
+        setBottomCube(red_trail[int(frames[BOTTOM_CUBE])], green_trail[int(frames[BOTTOM_CUBE])], blue_trail[int(frames[BOTTOM_CUBE])]);
+    }
+    delay(100);
 }
