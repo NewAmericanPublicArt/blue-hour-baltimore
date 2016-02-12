@@ -47,6 +47,10 @@
 #define DAH_RAMP 1
 #define DAH_PEAK 2000
 
+#define MORSE_LETTER_BREAK 1000
+#define MORSE_WORD_BREAK 3000
+#define SHY_ROBOT_LATENCY 20000
+
 int red_trail[768] = {0};
 int green_trail[768] = {0};
 int blue_trail[768] = {0};
@@ -56,8 +60,8 @@ float targets[TOTAL_CUBES] = {0.0, 100.0, 200.0};
 float homePositions[TOTAL_CUBES] = {0.0, 100.0, 200.0};
 
 int eventTotal = 0;
-
 char morse[50] = {0};
+unsigned long shyRobotTime = 0;
 
 void loadColorTrails() {
     for(int i=0; i<256; i++) {
@@ -152,21 +156,37 @@ void constructMorseString(int total) {
 //    Serial.print(morse);
 }
 
-void shyRobot() {
-/*    console.log("Shy robot emerging.");
-    var morse = constructMorseString();
-    if ( typeof shyRobot.MorseIndex == 'undefined' ) {
-        shyRobot.MorseIndex = 0;
+void shyRobotFleesToTheHeavens() {
+    setTopCube(255, 255, 255);
+    setMiddleCube(255, 255, 255);
+    setBottomCube(255, 255, 255);
+    delay(200);
+    setBottomCube(0, 0, 255);
+    delay(100);
+    setMiddleCube(0, 0, 255);
+    delay(50);
+    setTopCube(0,0,255);
+}
+
+unsigned long shyRobot() {
+    static int morseIndex = 0;
+    constructMorseString(23);
+    while(!(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR))) {
+        if(morse[morseIndex] == '1') {
+            dit();
+        } else if(morse[morseIndex] == '0') {
+            dah();
+        } else if(morse[morseIndex] == 'L') {
+            delay(MORSE_LETTER_BREAK);
+        }
+        morseIndex++;
+        if(morse[morseIndex] == 'W') {
+            morseIndex = 0;
+            delay(MORSE_WORD_BREAK);
+        }
     }
-    if(morse[shyRobot.MorseIndex] == '1') {
-        dit();
-    } else {
-        dah();
-    }
-    shyRobot.MorseIndex++;
-    if(shyRobot.MorseIndex == morse.length) {
-        shyRobot.MorseIndex = 0;
-    } */
+    shyRobotFleesToTheHeavens();
+    return millis();
 }
 
 void dit() {
@@ -243,7 +263,7 @@ void setup() {
     setBottomCube(HOME_COLOR);
     loadColorTrails();
     Serial.begin(9600);
-    /*shyRobotTimeoutID = setTimeout(shyRobot, 5000); */
+    shyRobotTime = millis();
 }
 
 void loop() {
@@ -258,6 +278,15 @@ void loop() {
         setTopCube(red_trail[int(frames[TOP_CUBE])], green_trail[int(frames[TOP_CUBE])], blue_trail[int(frames[TOP_CUBE])]);
         setMiddleCube(red_trail[int(frames[MIDDLE_CUBE])], green_trail[int(frames[MIDDLE_CUBE])], blue_trail[int(frames[MIDDLE_CUBE])]);
         setBottomCube(red_trail[int(frames[BOTTOM_CUBE])], green_trail[int(frames[BOTTOM_CUBE])], blue_trail[int(frames[BOTTOM_CUBE])]);
+    }
+    Serial.println("nothing");
+    if(millis() - shyRobotTime > SHY_ROBOT_LATENCY) {
+        Serial.println("It's robot time.");
+        shyRobotTime = shyRobot();
+        Serial.println("Run away! Run away!");
+    }
+    if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
+        shyRobotTime = millis();
     }
     delay(100);
 }
