@@ -40,7 +40,7 @@
 
 #define MAX_FRAME 767.0
 
-#define INITIAL_COLOR 0,0,255
+#define HOME_COLOR 0,0,255
 
 #define DIT_RAMP 1
 #define DIT_PEAK 500
@@ -56,6 +56,8 @@ float targets[TOTAL_CUBES] = {0.0, 100.0, 200.0};
 float homePositions[TOTAL_CUBES] = {0.0, 100.0, 200.0};
 
 int eventTotal = 0;
+
+char morse[50] = {0};
 
 void loadColorTrails() {
     for(int i=0; i<256; i++) {
@@ -124,30 +126,30 @@ void checkSensors() {
     lastEvent = millis(); // save for next time this function is called
 }
 
-void translateToMorse(int digit, char *buf) {
-/*    switch(digit) {
-        case 0: strcat(buf, '00000');
-        case 1: strcat(buf, '10000');
-        case 2: strcat(buf, '11000');
-        case 3: strcat(buf, '11100');
-        case 4: strcat(buf, '11110');
-        case 5: strcat(buf, '11111');
-        case 6: strcat(buf, '01111');
-        case 7: strcat(buf, '00111');
-        case 8: strcat(buf, '00011');
-        case 9: strcat(buf, '00001');
-    } */
+void translateToMorse(int digit) {
+    switch(digit) {
+        case 0: strcat(morse, "00000"); break;
+        case 1: strcat(morse, "10000"); break;
+        case 2: strcat(morse, "11000"); break;
+        case 3: strcat(morse, "11100"); break;
+        case 4: strcat(morse, "11110"); break;
+        case 5: strcat(morse, "11111"); break;
+        case 6: strcat(morse, "01111"); break;
+        case 7: strcat(morse, "00111"); break;
+        case 8: strcat(morse, "00011"); break;
+        case 9: strcat(morse, "00001"); break;
+    }
 }
 
-void constructMorseString() {
-/*    var morse = '';
-    morse = morse.concat(translateToMorse(eventTotal % 10));
-    if(eventTotal > 10) {
-        morse = 'L'.concat(morse);
-        morse = translateToMorse(int(eventTotal/10)).concat(morse);
+void constructMorseString(int total) {
+    memset(morse, '\0', sizeof(morse));
+    if(total > 10) {
+        translateToMorse(int(total/10));
+        strcat(morse, "L");
     }
-    morse = morse.concat('W');
-    return morse; */
+    translateToMorse(total % 10);
+    strcat(morse, "W");
+//    Serial.print(morse);
 }
 
 void shyRobot() {
@@ -236,9 +238,9 @@ void setup() {
     pinMode(SENSOR_TWO, INPUT);
     pinMode(SENSOR_THREE, INPUT);
     pinMode(SENSOR_FOUR, INPUT);
-    setTopCube(INITIAL_COLOR);
-    setMiddleCube(INITIAL_COLOR);
-    setBottomCube(INITIAL_COLOR);
+    setTopCube(HOME_COLOR);
+    setMiddleCube(HOME_COLOR);
+    setBottomCube(HOME_COLOR);
     loadColorTrails();
     Serial.begin(9600);
     /*shyRobotTimeoutID = setTimeout(shyRobot, 5000); */
