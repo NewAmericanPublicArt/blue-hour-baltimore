@@ -29,19 +29,31 @@
 
 #define TOO_SOON 2000
 
-#define TOP_CUBE 2
+#define TOTAL_CUBES 3
+#define TOP_CUBE 0
 #define MIDDLE_CUBE 1
-#define BOTTOM_CUBE 0
+#define BOTTOM_CUBE 2
+
+#define TOP_DMX_CHANNEL 4
+#define MIDDLE_DMX_CHANNEL 7
+#define BOTTOM_DMX_CHANNEL 10
 
 #define MAX_FRAME 767.0
+
+#define INITIAL_COLOR 0,0,255
+
+#define DIT_RAMP 1
+#define DIT_PEAK 500
+#define DAH_RAMP 1
+#define DAH_PEAK 2000
 
 int red_trail[768] = {0};
 int green_trail[768] = {0};
 int blue_trail[768] = {0};
 
-float frames[3] = {0.0, 100.0, 200.0};
-float targets[3] = {0.0, 100.0, 200.0};
-float homePositions[3] = {0.0, 100.0, 200.0};
+float frames[TOTAL_CUBES] = {0.0, 100.0, 200.0};
+float targets[TOTAL_CUBES] = {0.0, 100.0, 200.0};
+float homePositions[TOTAL_CUBES] = {0.0, 100.0, 200.0};
 
 int eventTotal = 0;
 
@@ -64,13 +76,13 @@ void loadColorTrails() {
 }
 
 void approachTargets() {
-    for(int i=0; i<3; i++) {
+    for(int i=0; i<TOTAL_CUBES; i++) {
         frames[i] = frames[i] + (targets[i] - frames[i])/10.0;
     }
 }
 
 void decayTargets() {
-    for(int i=0; i<3; i++) {
+    for(int i=0; i<TOTAL_CUBES; i++) {
         if(targets[i] > homePositions[i]) {
             targets[i] = max(0.0, targets[i] - 4.0);
         }
@@ -101,7 +113,7 @@ void checkSensors() {
             return; // do nothing, as we recently counted an event
         } else {
             eventTotal = eventTotal + 1;
-            for(int i=0; i<3; i++) {
+            for(int i=0; i<TOTAL_CUBES; i++) {
                 targets[i] = targets[i] + 150.0;
                 /*if(targets[i] > MAX_FRAME) {
                     targets[i] = MAX_FRAME;
@@ -156,57 +168,59 @@ void shyRobot() {
 }
 
 void dit() {
-/*    console.log('dit');
-    if ( typeof dit.nextColor == 'undefined' ) {
-        dit.nextColor = color('blue');
+    // assume we start off blue
+    int red = 0;
+    int green = 0;
+    for(int i=0; i<256; i++) {
+        setTopCube(red, green, 255);
+        red++;
+        green++;
+        delay(DIT_RAMP);
     }
-    setIntervalX(function () {
-        drawTopCube(dit.nextColor);
-        dit.nextColor = lerpColor(dit.nextColor, color('white'), 0.5);
-    }, 100, 5);
-    setTimeout(function () {
-        setIntervalX(function () {
-            drawTopCube(dit.nextColor);
-            dit.nextColor = lerpColor(dit.nextColor, color('blue'), 0.5);
-        }, 100, 5);
-    }, 700);
-    shyRobotTimeoutID = setTimeout(shyRobot, 2200); // call shyRobot again after dit ends: 700 + 500 + 1000 = 2200 */
+    delay(DIT_PEAK);
+    for(int i=0; i<256; i++) {
+        setTopCube(red, green, 255);
+        red--;
+        green--;
+        delay(DIT_RAMP);
+    }
 }
 
 void dah() {
-/*    console.log('dah');
-    if ( typeof dah.nextColor == 'undefined' ) {
-        dah.nextColor = color('blue');
+    // assume we start off blue
+    int red = 0;
+    int green = 0;
+    for(int i=0; i<256; i++) {
+        setTopCube(red, green, 255);
+        red++;
+        green++;
+        delay(DAH_RAMP);
     }
-    setIntervalX(function () {
-        drawTopCube(dah.nextColor);
-        dah.nextColor = lerpColor(dah.nextColor, color('white'), 0.5);
-    }, 100, 5);
-    setTimeout(function () {
-        setIntervalX(function () {
-            drawTopCube(dah.nextColor);
-            dah.nextColor = lerpColor(dah.nextColor, color('blue'), 0.5);
-        }, 100, 5);
-    }, 2000);
-    shyRobotTimeoutID = setTimeout(shyRobot, 3000); // call shyRobot again after dah ends: 2000 + 500 + 1000 = 3500 */
+    delay(2000);
+    for(int i=0; i<256; i++) {
+        setTopCube(red, green, 255);
+        red--;
+        green--;
+        delay(DAH_RAMP);
+    }
 }
 
 void setTopCube(int r, int g, int b) {
-    DmxSimple.write(4, r);
-    DmxSimple.write(5, g);
-    DmxSimple.write(6, b);
+    DmxSimple.write(TOP_DMX_CHANNEL, r);
+    DmxSimple.write(TOP_DMX_CHANNEL + 1, g);
+    DmxSimple.write(TOP_DMX_CHANNEL + 2, b);
 }
 
 void setMiddleCube(int r, int g, int b) {
-    DmxSimple.write(7, r);
-    DmxSimple.write(8, g);
-    DmxSimple.write(9, b);
+    DmxSimple.write(MIDDLE_DMX_CHANNEL, r);
+    DmxSimple.write(MIDDLE_DMX_CHANNEL + 1, g);
+    DmxSimple.write(MIDDLE_DMX_CHANNEL + 2, b);
 }
 
 void setBottomCube(int r, int g, int b) {
-    DmxSimple.write(10, r);
-    DmxSimple.write(11, g);
-    DmxSimple.write(12, b);
+    DmxSimple.write(BOTTOM_DMX_CHANNEL, r);
+    DmxSimple.write(BOTTOM_DMX_CHANNEL + 1, g);
+    DmxSimple.write(BOTTOM_DMX_CHANNEL + 2, b);
 }
 
 void setup() {
@@ -222,26 +236,15 @@ void setup() {
     pinMode(SENSOR_TWO, INPUT);
     pinMode(SENSOR_THREE, INPUT);
     pinMode(SENSOR_FOUR, INPUT);
-    setTopCube(0,0,255);
-    setMiddleCube(0,0,255);
-    setBottomCube(0,0,255);
+    setTopCube(INITIAL_COLOR);
+    setMiddleCube(INITIAL_COLOR);
+    setBottomCube(INITIAL_COLOR);
     loadColorTrails();
     Serial.begin(9600);
-
-/*    drawTopCube(color(color_trails[R][int(frames[0])], color_trails[G][int(frames[0])], color_trails[B][int(frames[0])]));
-    drawMiddleCube(color(color_trails[R][int(frames[1])], color_trails[G][int(frames[1])], color_trails[B][int(frames[1])]));
-    drawBottomCube(color(color_trails[R][int(frames[2])], color_trails[G][int(frames[2])], color_trails[B][int(frames[2])]));
-    shyRobotTimeoutID = setTimeout(shyRobot, 5000); */
+    /*shyRobotTimeoutID = setTimeout(shyRobot, 5000); */
 }
 
 void loop() {
-/*    if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
-        Serial.println("Motion detected acccch");
-        setTopCube(128,0,0);
-    } else {
-        Serial.println("xxxxxxx");
-        setTopCube(0,0,128);
-    }*/
     checkSensors();
     decayTargets();
     approachTargets();
