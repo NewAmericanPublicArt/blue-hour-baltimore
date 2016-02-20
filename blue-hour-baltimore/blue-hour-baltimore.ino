@@ -51,9 +51,12 @@
 #define MORSE_WORD_BREAK 3000
 #define SHY_ROBOT_LATENCY 20000
 
-int red_trail[768] = {0};
-int green_trail[768] = {0};
-int blue_trail[768] = {0};
+#define TOTAL_FRAMES 768
+#define FRAME_LOOP_START 512
+
+int red_trail[TOTAL_FRAMES] = {0};
+int green_trail[TOTAL_FRAMES] = {0};
+int blue_trail[TOTAL_FRAMES] = {0};
 
 float frames[TOTAL_CUBES] = {0.0, 100.0, 200.0};
 float targets[TOTAL_CUBES] = {0.0, 100.0, 200.0};
@@ -74,7 +77,7 @@ void loadColorTrails() {
         green_trail[i] = 0;
         blue_trail[i] = 511-i;
     }
-    for(int i=511; i<768; i++) {
+    for(int i=511; i<TOTAL_FRAMES; i++) {
         red_trail[i] = 255;
         green_trail[i] = 0;
         blue_trail[i] = 0;
@@ -121,9 +124,9 @@ void checkSensors() {
             eventTotal = eventTotal + 1;
             for(int i=0; i<TOTAL_CUBES; i++) {
                 targets[i] = targets[i] + 150.0;
-                /*if(targets[i] > MAX_FRAME) {
-                    targets[i] = MAX_FRAME;
-                }*/
+                if(targets[i] > TOTAL_FRAMES) {
+                    targets[i] = FRAME_LOOP_START + targets[i] - TOTAL_FRAMES;
+                }
             }
         }
     }
