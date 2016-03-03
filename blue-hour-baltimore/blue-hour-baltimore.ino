@@ -33,6 +33,7 @@
 #define TOP_CUBE 0
 #define MIDDLE_CUBE 1
 #define BOTTOM_CUBE 2
+#define LOWER_TWO_CUBES 3
 
 #define TOP_DMX_CHANNEL 4
 #define MIDDLE_DMX_CHANNEL 7
@@ -51,7 +52,10 @@
 #define MORSE_WORD_BREAK 3000
 #define SHY_ROBOT_LATENCY 20000
 
-#define TOTAL_FRAMES 768
+#define END_FRAME_ZONE_ONE 1000
+#define END_FRAME_ZONE_TWO 2000
+#define TOTAL_FRAMES 3000
+#define ZONE_SPAN 1000
 #define FRAME_LOOP_START 512
 
 int red_trail[TOTAL_FRAMES] = {0};
@@ -67,18 +71,21 @@ char morse[50] = {0};
 unsigned long shyRobotTime = 0;
 
 void loadColorTrails() {
-    for(int i=0; i<256; i++) {
+    int scaled_i = 0;
+
+    for(int i=0; i<END_FRAME_ZONE_ONE; i++) {
         red_trail[i] = 0;
         green_trail[i] = 0;
-        blue_trail[i] = 255;
+        blue_trail[i] = 255; // all blue
     }
-    for(int i=256; i<511; i++) {
-        red_trail[i] = i-255;
+    for(int i=END_FRAME_ZONE_ONE; i<END_FRAME_ZONE_ONE + ZONE_SPAN; i++) {
+        scaled_i = 255*(i - END_FRAME_ZONE_ONE)/ZONE_SPAN
+        red_trail[i] = scaled_i - 255; // ramp from 255 to 0
         green_trail[i] = 0;
-        blue_trail[i] = 511-i;
+        blue_trail[i] = 511 - scaled_i; // ramp from 0 to 255
     }
-    for(int i=511; i<TOTAL_FRAMES; i++) {
-        red_trail[i] = 255;
+    for(int i=END_FRAME_ZONE_TWO; i<TOTAL_FRAMES; i++) {
+        red_trail[i] = 255; // all red
         green_trail[i] = 0;
         blue_trail[i] = 0;
     }
@@ -163,12 +170,44 @@ void shyRobotFleesToTheHeavens() {
     setTopCube(255, 255, 255);
     setMiddleCube(255, 255, 255);
     setBottomCube(255, 255, 255);
-    delay(200);
-    setBottomCube(0, 0, 255);
-    delay(100);
-    setMiddleCube(0, 0, 255);
     delay(50);
-    setTopCube(0,0,255);
+    setTopCube(0, 0, 0);
+    setMiddleCube(0, 0, 0);
+    setBottomCube(255, 255, 255);
+    delay(50);
+    setTopCube(0, 0, 0);
+    setMiddleCube(255, 255, 255);
+    setBottomCube(50, 50, 50);
+    delay(50);
+    setTopCube(255, 255, 255);
+    setMiddleCube(50, 50, 50);
+    setBottomCube(10, 10, 10);
+    delay(50);
+    setTopCube(50, 50, 50);
+    setMiddleCube(10, 10, 10);
+    setBottomCube(0, 0, 0);
+    delay(50);
+    setTopCube(10, 10, 10);
+    setMiddleCube(0, 0, 0);
+    setBottomCube(0, 0, 0);
+    delay(50);
+    setTopCube(0, 0, 0);
+    setMiddleCube(0, 0, 0);
+    setBottomCube(0, 0, 0);
+}
+
+void fastBotFlashesYou() {
+    setTopCube(255, 0, 0);
+    setMiddleCube(255, 0, 0);
+    setBottomCube(255, 0, 0);
+    delay(50);
+    setBottomCube(255, 255, 255);
+    delay(50);
+    setBottomCube(10, 10, 10);
+    setMiddleCube(255, 255, 255);
+    delay(50);
+    setMiddleCube(10, 10, 10);
+    setTopCube(255, 255, 255);   
 }
 
 unsigned long shyRobot() {
@@ -192,38 +231,66 @@ unsigned long shyRobot() {
     return millis();
 }
 
-void dit() {
+void dit(int which_cubes) {
     // assume we start off blue
     int red = 0;
     int green = 0;
     for(int i=0; i<256; i++) {
-        setTopCube(red, green, 255);
+        switch(which_cubes):
+            case TOP_CUBE:
+                setTopCube(red, green, 255);
+            case MIDDLE_CUBE:
+                setMiddleCube(red, green, 255);
+            case LOWER_TWO_CUBES:
+                setMiddleCube(red, green, 255);
+                setBottomCube(red, green, 255);
         red++;
         green++;
         delay(DIT_RAMP);
     }
     delay(DIT_PEAK);
     for(int i=0; i<256; i++) {
-        setTopCube(red, green, 255);
+        switch(which_cubes):
+            case TOP_CUBE:
+                setTopCube(red, green, 255);
+            case MIDDLE_CUBE:
+                setMiddleCube(red, green, 255);
+            case LOWER_TWO_CUBES:
+                setMiddleCube(red, green, 255);
+                setBottomCube(red, green, 255);
         red--;
         green--;
         delay(DIT_RAMP);
     }
 }
 
-void dah() {
+void dah(int which_cubes) {
     // assume we start off blue
     int red = 0;
     int green = 0;
     for(int i=0; i<256; i++) {
-        setTopCube(red, green, 255);
+        switch(which_cubes):
+            case TOP_CUBE:
+                setTopCube(red, green, 255);
+            case MIDDLE_CUBE:
+                setMiddleCube(red, green, 255);
+            case LOWER_TWO_CUBES:
+                setMiddleCube(red, green, 255);
+                setBottomCube(red, green, 255);
         red++;
         green++;
         delay(DAH_RAMP);
     }
-    delay(2000);
+    delay(DAH_PEAK);
     for(int i=0; i<256; i++) {
-        setTopCube(red, green, 255);
+        switch(which_cubes):
+            case TOP_CUBE:
+                setTopCube(red, green, 255);
+            case MIDDLE_CUBE:
+                setMiddleCube(red, green, 255);
+            case LOWER_TWO_CUBES:
+                setMiddleCube(red, green, 255);
+                setBottomCube(red, green, 255);
         red--;
         green--;
         delay(DAH_RAMP);
@@ -289,7 +356,7 @@ void loop() {
         Serial.println("Run away! Run away!");
     }
     if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
-        shyRobotTime = millis();
+        shyRobotTime = millis(); // reset the shyRobot timer
     }
     delay(100);
 }
