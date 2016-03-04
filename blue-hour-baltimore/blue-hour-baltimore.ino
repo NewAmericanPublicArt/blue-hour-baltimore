@@ -27,6 +27,11 @@
 #define TRUE 1
 #define FALSE 0
 
+#define LOOP_PERIOD 100
+#define FRAMES_TO_JUMP_ON_MOTION 250.0
+#define CUBIC 3
+#define CUBIC_EASING_DURATION_IN_MS 9000.0
+
 #define TOO_SOON 2000
 
 #define TOTAL_CUBES 3
@@ -62,9 +67,11 @@ int red_trail[TOTAL_FRAMES] = {0};
 int green_trail[TOTAL_FRAMES] = {0};
 int blue_trail[TOTAL_FRAMES] = {0};
 
-float frames[TOTAL_CUBES] = {0.0, 100.0, 200.0};
-float targets[TOTAL_CUBES] = {0.0, 100.0, 200.0};
-float homePositions[TOTAL_CUBES] = {0.0, 100.0, 200.0};
+float frames[TOTAL_CUBES] = {0.0, 500.0, 1000.0};
+float targets[TOTAL_CUBES] = {0.0, 500.0, 1000.0};
+float homePositions[TOTAL_CUBES] = {0.0, 500.0, 1000.0};
+
+float millis_at_last_trigger = 0;
 
 int eventTotal = 0;
 char morse[50] = {0};
@@ -79,7 +86,7 @@ void loadColorTrails() {
         blue_trail[i] = 255; // all blue
     }
     for(int i=END_FRAME_ZONE_ONE; i<END_FRAME_ZONE_ONE + ZONE_SPAN; i++) {
-        scaled_i = 255*(i - END_FRAME_ZONE_ONE)/ZONE_SPAN
+        scaled_i = 255*(i - END_FRAME_ZONE_ONE)/ZONE_SPAN;
         red_trail[i] = scaled_i - 255; // ramp from 255 to 0
         green_trail[i] = 0;
         blue_trail[i] = 511 - scaled_i; // ramp from 0 to 255
@@ -91,9 +98,21 @@ void loadColorTrails() {
     }
 }
 
+float easing(int mode, int cube_index, float ms_since_trigger) {
+    float b = targets[cube_index] - FRAMES_TO_JUMP_ON_MOTION;
+    float c = FRAMES_TO_JUMP_ON_MOTION;
+    float d = CUBIC_EASING_DURATION_IN_MS;
+    float t = 0;
+
+    if(mode == CUBIC) {
+        t = (ms_since_trigger/d) - 1; // scale time from [0-duration] to [-1 to 0]
+        return c*t*t*t + c + b;
+    }
+}
+
 void approachTargets() {
     for(int i=0; i<TOTAL_CUBES; i++) {
-        frames[i] = frames[i] + (targets[i] - frames[i])/10.0;
+        frames[i] = easing(CUBIC, i, millis() - millis_at_last_trigger);
     }
 }
 
@@ -130,11 +149,12 @@ void checkSensors() {
         } else {
             eventTotal = eventTotal + 1;
             for(int i=0; i<TOTAL_CUBES; i++) {
-                targets[i] = targets[i] + 150.0;
+                targets[i] = targets[i] + FRAMES_TO_JUMP_ON_MOTION;
                 if(targets[i] > TOTAL_FRAMES) {
                     targets[i] = FRAME_LOOP_START + targets[i] - TOTAL_FRAMES;
                 }
             }
+            millis_at_last_trigger = millis();
         }
     }
     lastEvent = millis(); // save for next time this function is called
@@ -215,9 +235,9 @@ unsigned long shyRobot() {
     constructMorseString(23);
     while(!(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR))) {
         if(morse[morseIndex] == '1') {
-            dit();
+            dit(TOP_CUBE);
         } else if(morse[morseIndex] == '0') {
-            dah();
+            dah(TOP_CUBE);
         } else if(morse[morseIndex] == 'L') {
             delay(MORSE_LETTER_BREAK);
         }
@@ -236,28 +256,36 @@ void dit(int which_cubes) {
     int red = 0;
     int green = 0;
     for(int i=0; i<256; i++) {
-        switch(which_cubes):
+        switch(which_cubes) {
             case TOP_CUBE:
                 setTopCube(red, green, 255);
+                break;
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
+                break;
             case LOWER_TWO_CUBES:
                 setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
+                break;
+        }
         red++;
         green++;
         delay(DIT_RAMP);
     }
     delay(DIT_PEAK);
     for(int i=0; i<256; i++) {
-        switch(which_cubes):
+        switch(which_cubes) {
             case TOP_CUBE:
                 setTopCube(red, green, 255);
+                break;
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
+                break;
             case LOWER_TWO_CUBES:
                 setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
+                break;
+        }
         red--;
         green--;
         delay(DIT_RAMP);
@@ -269,28 +297,36 @@ void dah(int which_cubes) {
     int red = 0;
     int green = 0;
     for(int i=0; i<256; i++) {
-        switch(which_cubes):
+        switch(which_cubes) {
             case TOP_CUBE:
                 setTopCube(red, green, 255);
+                break;
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
+                break;
             case LOWER_TWO_CUBES:
                 setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
+                break;
+        }
         red++;
         green++;
         delay(DAH_RAMP);
     }
     delay(DAH_PEAK);
     for(int i=0; i<256; i++) {
-        switch(which_cubes):
+        switch(which_cubes) {
             case TOP_CUBE:
                 setTopCube(red, green, 255);
+                break;
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
+                break;
             case LOWER_TWO_CUBES:
                 setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
+                break;
+        }
         red--;
         green--;
         delay(DAH_RAMP);
@@ -337,19 +373,28 @@ void setup() {
 }
 
 void loop() {
+    unsigned long loop_thus_far;
+    signed long loop_remaining;
+    static unsigned long looptimer;
+    looptimer = millis(); // mark the beginning of the loop
     checkSensors();
     decayTargets();
     approachTargets();
-    Serial.print("Targets: [");
+    Serial.print("Targets[0],[1],[2]: [");
     Serial.print(targets[0]);
+    Serial.print("], [");
+    Serial.print(targets[1]);
+    Serial.print("], [");
+    Serial.print(targets[2]);
     Serial.print("]\n");
+    Serial.print("Event total: ");
     Serial.print(eventTotal);
+    Serial.print("\n");
     if(cubesStillChanging()) {
         setTopCube(red_trail[int(frames[TOP_CUBE])], green_trail[int(frames[TOP_CUBE])], blue_trail[int(frames[TOP_CUBE])]);
         setMiddleCube(red_trail[int(frames[MIDDLE_CUBE])], green_trail[int(frames[MIDDLE_CUBE])], blue_trail[int(frames[MIDDLE_CUBE])]);
         setBottomCube(red_trail[int(frames[BOTTOM_CUBE])], green_trail[int(frames[BOTTOM_CUBE])], blue_trail[int(frames[BOTTOM_CUBE])]);
     }
-    Serial.println("nothing");
     if(millis() - shyRobotTime > SHY_ROBOT_LATENCY) {
         Serial.println("It's robot time.");
         shyRobotTime = shyRobot();
@@ -358,5 +403,15 @@ void loop() {
     if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
         shyRobotTime = millis(); // reset the shyRobot timer
     }
-    delay(100);
+
+    /* See how long this loop has taken so far, and then delay so that we hit LOOP_PERIOD correctly. */
+    loop_thus_far = millis() - looptimer;
+    loop_remaining = LOOP_PERIOD - loop_thus_far;
+    if(loop_remaining > 0) {
+        Serial.println("Looptime:");
+        Serial.println(loop_thus_far);
+        delay(loop_remaining);
+    } else {
+        Serial.println("Loop blown!");
+    }
 }
