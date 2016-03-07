@@ -28,9 +28,11 @@
 #define FALSE 0
 
 #define LOOP_PERIOD 100
-#define FRAMES_TO_JUMP_ON_MOTION 250.0
+#define FRAMES_TO_JUMP_ON_MOTION 100.0
 #define CUBIC 3
-#define CUBIC_EASING_DURATION_IN_MS 9000.0
+#define CUBIC_EASING_DURATION_IN_MS 4000.0
+
+#define DECAY_DIVISOR 30.0
 
 #define TOO_SOON 2000
 
@@ -61,15 +63,17 @@
 #define END_FRAME_ZONE_TWO 2000
 #define TOTAL_FRAMES 3000
 #define ZONE_SPAN 1000
-#define FRAME_LOOP_START 512
+#define FRAME_LOOP_START 2400
+#define TARGET_MARGIN 1.0
 
 int red_trail[TOTAL_FRAMES] = {0};
 int green_trail[TOTAL_FRAMES] = {0};
 int blue_trail[TOTAL_FRAMES] = {0};
 
-float frames[TOTAL_CUBES] = {0.0, 500.0, 1000.0};
-float targets[TOTAL_CUBES] = {0.0, 500.0, 1000.0};
-float homePositions[TOTAL_CUBES] = {0.0, 500.0, 1000.0};
+float frames[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
+float targets[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
+float frame_snapshot[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
+float homePositions[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
 
 float millis_at_last_trigger = 0;
 
@@ -99,27 +103,45 @@ void loadColorTrails() {
 }
 
 float easing(int mode, int cube_index, float ms_since_trigger) {
-    float b = targets[cube_index] - FRAMES_TO_JUMP_ON_MOTION;
-    float c = FRAMES_TO_JUMP_ON_MOTION;
+    float b = frame_snapshot[cube_index];
+    float c = targets[cube_index] - frame_snapshot[cube_index];
     float d = CUBIC_EASING_DURATION_IN_MS;
     float t = 0;
+    float easing = 0;
 
     if(mode == CUBIC) {
         t = (ms_since_trigger/d) - 1; // scale time from [0-duration] to [-1 to 0]
-        return c*t*t*t + c + b;
+        easing = c*t*t*t + c + b;
+        /*if(cube_index == 2) {
+            Serial.print("t: ");
+            Serial.print(t);
+            Serial.print("b: ");
+            Serial.print(b);
+            Serial.print(", e: ");
+            Serial.print(easing);
+            Serial.print(", ");
+        }*/
+        return easing;
+    } else {
+        Serial.println("Easing mode not set right.\n");
+        return 0.0;
     }
 }
 
 void approachTargets() {
+    float e;
     for(int i=0; i<TOTAL_CUBES; i++) {
-        frames[i] = easing(CUBIC, i, millis() - millis_at_last_trigger);
+        e = easing(CUBIC, i, millis() - millis_at_last_trigger);
+        frames[i] = e;
     }
 }
 
 void decayTargets() {
     for(int i=0; i<TOTAL_CUBES; i++) {
         if(targets[i] > homePositions[i]) {
-            targets[i] = max(0.0, targets[i] - 4.0);
+            targets[i] = max(0.0, targets[i] - targets[i]/DECAY_DIVISOR);
+            frames[i] = targets[i]; // Here, we can make targets track frames directly
+                                    // because decay is based on position in color trail, not time.
         }
     }
 }
@@ -140,24 +162,27 @@ char tooSoon(unsigned long lastEvent) {
     }
 }
 
-void checkSensors() {
+int checkSensors() {
     static unsigned long lastEvent = 0;
 
     if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
         if(tooSoon(lastEvent)) {
-            return; // do nothing, as we recently counted an event
+            return TRUE; // do nothing, as we recently counted an event
         } else {
             eventTotal = eventTotal + 1;
             for(int i=0; i<TOTAL_CUBES; i++) {
+                frame_snapshot[i] = frames[i]; // Record frames when jump occurs for use in easing
                 targets[i] = targets[i] + FRAMES_TO_JUMP_ON_MOTION;
                 if(targets[i] > TOTAL_FRAMES) {
                     targets[i] = FRAME_LOOP_START + targets[i] - TOTAL_FRAMES;
                 }
             }
-            millis_at_last_trigger = millis();
+            millis_at_last_trigger = millis(); // global variable for approachTargets(). Kind of sloppy.
+            lastEvent = millis(); // save for next time this function is called
+            return TRUE;
         }
     }
-    lastEvent = millis(); // save for next time this function is called
+    return FALSE;
 }
 
 void translateToMorse(int digit) {
@@ -373,14 +398,21 @@ void setup() {
 }
 
 void loop() {
+    static int climbing_color_trail = 0;
     unsigned long loop_thus_far;
     signed long loop_remaining;
     static unsigned long looptimer;
     looptimer = millis(); // mark the beginning of the loop
-    checkSensors();
-    decayTargets();
-    approachTargets();
-    Serial.print("Targets[0],[1],[2]: [");
+    climbing_color_trail = checkSensors();
+    if(climbing_color_trail == TRUE) {
+        approachTargets();
+        if(abs(targets[0] - frames[0]) < TARGET_MARGIN) { // We're close enough to our color targets.
+            climbing_color_trail = FALSE;
+        }
+    } else {
+        decayTargets();
+    }
+/*    Serial.print("Targets[0],[1],[2]: [");
     Serial.print(targets[0]);
     Serial.print("], [");
     Serial.print(targets[1]);
@@ -389,6 +421,16 @@ void loop() {
     Serial.print("]\n");
     Serial.print("Event total: ");
     Serial.print(eventTotal);
+    Serial.print("\n");*/
+    Serial.print(millis());
+    Serial.print(",");
+    Serial.print(frames[0]);
+    Serial.print(",");
+    Serial.print(frames[1]);
+    Serial.print(",");
+    Serial.print(frames[2]);
+    Serial.print(",");
+    Serial.print(targets[2]);
     Serial.print("\n");
     if(cubesStillChanging()) {
         setTopCube(red_trail[int(frames[TOP_CUBE])], green_trail[int(frames[TOP_CUBE])], blue_trail[int(frames[TOP_CUBE])]);
@@ -408,8 +450,8 @@ void loop() {
     loop_thus_far = millis() - looptimer;
     loop_remaining = LOOP_PERIOD - loop_thus_far;
     if(loop_remaining > 0) {
-        Serial.println("Looptime:");
-        Serial.println(loop_thus_far);
+        /*Serial.println("Looptime:");
+        Serial.println(loop_thus_far);*/
         delay(loop_remaining);
     } else {
         Serial.println("Loop blown!");
