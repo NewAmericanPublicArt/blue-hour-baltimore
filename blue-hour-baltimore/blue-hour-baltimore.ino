@@ -18,6 +18,7 @@
 
 #include <DmxSimple.h>
 #include <string.h>
+#include "blue-hour-color-trails.h"
 
 #define SENSOR_ONE 16
 #define SENSOR_TWO 17
@@ -28,13 +29,14 @@
 #define FALSE 0
 
 #define LOOP_PERIOD 100
-#define FRAMES_TO_JUMP_ON_MOTION 100.0
+#define FRAMES_TO_JUMP_ON_MOTION 200.0
 #define CUBIC 3
-#define CUBIC_EASING_DURATION_IN_MS 4000.0
+#define CUBIC_EASING_DURATION_IN_MS 1000.0
 
-#define DECAY_DIVISOR 30.0
+// Larger divisor means slower decay
+#define DECAY_DIVISOR 50.0
 
-#define TOO_SOON 2000
+#define TOO_SOON 1000
 
 #define TOTAL_CUBES 3
 #define TOP_CUBE 0
@@ -59,48 +61,19 @@
 #define MORSE_WORD_BREAK 3000
 #define SHY_ROBOT_LATENCY 20000
 
-#define END_FRAME_ZONE_ONE 1000
-#define END_FRAME_ZONE_TWO 2000
-#define TOTAL_FRAMES 3000
-#define ZONE_SPAN 1000
-#define FRAME_LOOP_START 2400
+#define FRAME_LOOP_START 6000
 #define TARGET_MARGIN 1.0
 
-int red_trail[TOTAL_FRAMES] = {0};
-int green_trail[TOTAL_FRAMES] = {0};
-int blue_trail[TOTAL_FRAMES] = {0};
-
-float frames[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
-float targets[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
-float frame_snapshot[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
-float homePositions[TOTAL_CUBES] = {350.0, 650.0, 1000.0};
+float frames[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
+float targets[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
+float frame_snapshot[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
+float homePositions[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
 
 float millis_at_last_trigger = 0;
 
 int eventTotal = 0;
 char morse[50] = {0};
 unsigned long shyRobotTime = 0;
-
-void loadColorTrails() {
-    int scaled_i = 0;
-
-    for(int i=0; i<END_FRAME_ZONE_ONE; i++) {
-        red_trail[i] = 0;
-        green_trail[i] = 0;
-        blue_trail[i] = 255; // all blue
-    }
-    for(int i=END_FRAME_ZONE_ONE; i<END_FRAME_ZONE_ONE + ZONE_SPAN; i++) {
-        scaled_i = 255*(i - END_FRAME_ZONE_ONE)/ZONE_SPAN;
-        red_trail[i] = scaled_i - 255; // ramp from 255 to 0
-        green_trail[i] = 0;
-        blue_trail[i] = 511 - scaled_i; // ramp from 0 to 255
-    }
-    for(int i=END_FRAME_ZONE_TWO; i<TOTAL_FRAMES; i++) {
-        red_trail[i] = 255; // all red
-        green_trail[i] = 0;
-        blue_trail[i] = 0;
-    }
-}
 
 float easing(int mode, int cube_index, float ms_since_trigger) {
     float b = frame_snapshot[cube_index];
@@ -392,7 +365,6 @@ void setup() {
     setTopCube(HOME_COLOR);
     setMiddleCube(HOME_COLOR);
     setBottomCube(HOME_COLOR);
-    loadColorTrails();
     Serial.begin(9600);
     shyRobotTime = millis();
 }
