@@ -145,9 +145,8 @@ int checkSensors() {
             eventTotal = eventTotal + 1;
             for(int i=0; i<TOTAL_CUBES; i++) {
                 frame_snapshot[i] = frames[i]; // Record frames when jump occurs for use in easing
-                targets[i] = targets[i] + FRAMES_TO_JUMP_ON_MOTION;
-                if(targets[i] > TOTAL_FRAMES) {
-                    targets[i] = FRAME_LOOP_START + targets[i] - TOTAL_FRAMES;
+                if(targets[2] < TOTAL_FRAMES - FRAMES_TO_JUMP_ON_MOTION - 1) {
+                    targets[i] = targets[i] + FRAMES_TO_JUMP_ON_MOTION;
                 }
             }
             millis_at_last_trigger = millis(); // global variable for approachTargets(). Kind of sloppy.
