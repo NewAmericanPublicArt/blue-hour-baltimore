@@ -59,7 +59,7 @@
 
 #define MORSE_LETTER_BREAK 1000
 #define MORSE_WORD_BREAK 3000
-#define SHY_ROBOT_LATENCY 20000
+#define SHY_ROBOT_LATENCY 30000
 
 #define FRAME_LOOP_START 6000
 #define TARGET_MARGIN 1.0
@@ -145,8 +145,12 @@ int checkSensors() {
             eventTotal = eventTotal + 1;
             for(int i=0; i<TOTAL_CUBES; i++) {
                 frame_snapshot[i] = frames[i]; // Record frames when jump occurs for use in easing
-                if(targets[2] < TOTAL_FRAMES - FRAMES_TO_JUMP_ON_MOTION - 1) {
+                if(targets[BOTTOM_CUBE] < TOTAL_FRAMES - FRAMES_TO_JUMP_ON_MOTION - 1) {
                     targets[i] = targets[i] + FRAMES_TO_JUMP_ON_MOTION;
+                } else {
+                    // We've hit the end of the trails. Fire the FASTBOT!
+                    // Is FASTBOT an acronym? No, but I have SIGINT that it should be capitalized.
+                    fastBotFlashesYou(); // blocks for 200 ms or so
                 }
             }
             millis_at_last_trigger = millis(); // global variable for approachTargets(). Kind of sloppy.
@@ -214,17 +218,19 @@ void shyRobotFleesToTheHeavens() {
 }
 
 void fastBotFlashesYou() {
-    setTopCube(255, 0, 0);
-    setMiddleCube(255, 0, 0);
-    setBottomCube(255, 0, 0);
-    delay(50);
+    // Assume we start with all cubes red
     setBottomCube(255, 255, 255);
     delay(50);
-    setBottomCube(10, 10, 10);
+    setBottomCube(20, 20, 20);
     setMiddleCube(255, 255, 255);
     delay(50);
-    setMiddleCube(10, 10, 10);
-    setTopCube(255, 255, 255);   
+    setBottomCube(255, 0, 0);
+    setMiddleCube(20, 20, 20);
+    setTopCube(255, 255, 255);
+    delay(50);
+    setMiddleCube(255, 0, 0);
+    setTopCube(20, 20, 20);
+    delay(50);    
 }
 
 unsigned long shyRobot() {
