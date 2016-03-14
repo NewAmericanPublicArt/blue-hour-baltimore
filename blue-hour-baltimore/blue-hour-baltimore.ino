@@ -29,14 +29,14 @@
 #define FALSE 0
 
 #define LOOP_PERIOD 100
-#define FRAMES_TO_JUMP_ON_MOTION 200.0
-#define CUBIC 3
-#define CUBIC_EASING_DURATION_IN_MS 1000.0
+#define FRAMES_TO_JUMP_ON_MOTION 200.0 // how many frames to jump in the animation when motion detected
+#define CUBIC 3 // no other options exist yet
+#define CUBIC_EASING_DURATION_IN_MS 2000.0 // time to ease through said frames
 
 // Larger divisor means slower decay
-#define DECAY_DIVISOR 50.0
+#define DECAY_DIVISOR 200.0 // reverse animation progression
 
-#define TOO_SOON 1000
+#define TOO_SOON 2000
 
 #define TOTAL_CUBES 3
 #define TOP_CUBE 0
@@ -48,8 +48,6 @@
 #define MIDDLE_DMX_CHANNEL 7
 #define BOTTOM_DMX_CHANNEL 10
 
-#define MAX_FRAME 767.0
-
 #define HOME_COLOR 0,0,255
 
 #define DIT_RAMP 1
@@ -59,7 +57,7 @@
 
 #define MORSE_LETTER_BREAK 1000
 #define MORSE_WORD_BREAK 3000
-#define SHY_ROBOT_LATENCY 30000
+#define SHY_ROBOT_LATENCY 3000
 
 #define FRAME_LOOP_START 6000
 #define TARGET_MARGIN 1.0
@@ -112,7 +110,7 @@ void approachTargets() {
 void decayTargets() {
     for(int i=0; i<TOTAL_CUBES; i++) {
         if(targets[i] > homePositions[i]) {
-            targets[i] = max(0.0, targets[i] - targets[i]/DECAY_DIVISOR);
+            targets[i] = max(0.0, targets[i] - targets[BOTTOM_CUBE]/DECAY_DIVISOR);
             frames[i] = targets[i]; // Here, we can make targets track frames directly
                                     // because decay is based on position in color trail, not time.
         }
@@ -419,7 +417,7 @@ void loop() {
         shyRobotTime = shyRobot();
         Serial.println("Run away! Run away!");
     }
-    if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR)) {
+    if(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR) || frames[BOTTOM_CUBE] - homePositions[BOTTOM_CUBE] > 2.0) {
         shyRobotTime = millis(); // reset the shyRobot timer
     }
 
