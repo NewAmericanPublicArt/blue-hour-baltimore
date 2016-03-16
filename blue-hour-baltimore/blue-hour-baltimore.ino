@@ -62,14 +62,15 @@
 #define FRAME_LOOP_START 6000
 #define TARGET_MARGIN 1.0
 
-float frames[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
-float targets[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
-float frame_snapshot[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
-float homePositions[TOTAL_CUBES] = {1000.0, 2500.0, 4000.0};
+float frames[TOTAL_CUBES] = {2000.0, 3000.0, 4000.0};
+float targets[TOTAL_CUBES] = {2000.0, 3000.0, 4000.0};
+float frame_snapshot[TOTAL_CUBES] = {2000.0, 3000.0, 4000.0};
+float homePositions[TOTAL_CUBES] = {2000.0, 3000.0, 4000.0};
 
 float millis_at_last_trigger = 0;
 
 int eventTotal = 0;
+int shyRobotCube = 0;
 char morse[50] = {0};
 unsigned long shyRobotTime = 0;
 
@@ -186,66 +187,139 @@ void constructMorseString(int total) {
 }
 
 void shyRobotFleesToTheHeavens() {
-    setTopCube(255, 255, 255);
-    setMiddleCube(255, 255, 255);
-    setBottomCube(255, 255, 255);
-    delay(50);
-    setTopCube(0, 0, 0);
-    setMiddleCube(0, 0, 0);
-    setBottomCube(255, 255, 255);
-    delay(50);
-    setTopCube(0, 0, 0);
-    setMiddleCube(255, 255, 255);
-    setBottomCube(50, 50, 50);
-    delay(50);
-    setTopCube(255, 255, 255);
-    setMiddleCube(50, 50, 50);
-    setBottomCube(10, 10, 10);
-    delay(50);
-    setTopCube(50, 50, 50);
-    setMiddleCube(10, 10, 10);
-    setBottomCube(0, 0, 0);
-    delay(50);
-    setTopCube(10, 10, 10);
-    setMiddleCube(0, 0, 0);
-    setBottomCube(0, 0, 0);
-    delay(50);
-    setTopCube(0, 0, 0);
-    setMiddleCube(0, 0, 0);
-    setBottomCube(0, 0, 0);
+  switch (shyRobotCube) {
+    case 0:
+      setTopCube(255, 255, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      delay(70);
+      setTopCube(50, 50, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      delay(70);
+      setTopCube(10, 10, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      delay(70);
+      setTopCube(0, 0, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      shyRobotCube = 0;
+      break;
+    case 1:
+      setTopCube(0, 0, 255);
+      setMiddleCube(255, 255, 255);
+      setBottomCube(0, 0, 255);
+      delay(60);
+      setTopCube(255, 255, 255);
+      setMiddleCube(50, 50, 255);
+      setBottomCube(0, 0, 255);
+      delay(60);
+      setTopCube(50, 50, 255);
+      setMiddleCube(10, 10, 255);
+      setBottomCube(0, 0, 255);
+      delay(60);
+      setTopCube(10, 10, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      delay(60);
+      setTopCube(0, 0, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      shyRobotCube = 0;
+      break;
+    case 2:
+      setTopCube(0, 0, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(255, 255, 255);
+      delay(50);
+      setTopCube(0, 0, 255);
+      setMiddleCube(255, 255, 255);
+      setBottomCube(50, 50, 255);
+      delay(50);
+      setTopCube(255, 255, 255);
+      setMiddleCube(50, 50, 255);
+      setBottomCube(10, 10, 255);
+      delay(50);
+      setTopCube(50, 50, 255);
+      setMiddleCube(10, 10, 255);
+      setBottomCube(0, 0, 255);
+      delay(50);
+      setTopCube(10, 10, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      delay(50);
+      setTopCube(0, 0, 255);
+      setMiddleCube(0, 0, 255);
+      setBottomCube(0, 0, 255);
+      shyRobotCube = 0;
+      break;
+    default: 
+      setTopCube(255, 255, 255);
+      setMiddleCube(0, 0, 0);
+      setBottomCube(0, 0, 0);
+      delay(70);
+      setTopCube(50, 50, 50);
+      setMiddleCube(0, 0, 0);
+      setBottomCube(0, 0, 0);
+      delay(70);
+      setTopCube(10, 10, 10);
+      setMiddleCube(0, 0, 0);
+      setBottomCube(0, 0, 0);
+      delay(70);
+      setTopCube(0, 0, 0);
+      setMiddleCube(0, 0, 0);
+      setBottomCube(0, 0, 0);
+      shyRobotCube = 0;
+      break;
+  }
 }
 
 void fastBotFlashesYou() {
     // Assume we start with all cubes red
-    setBottomCube(255, 255, 255);
+    setBottomCube(255, 10, 0);
     delay(50);
-    setBottomCube(20, 20, 20);
-    setMiddleCube(255, 255, 255);
+    setBottomCube(255, 30, 0);
     delay(50);
-    setBottomCube(255, 0, 0);
-    setMiddleCube(20, 20, 20);
-    setTopCube(255, 255, 255);
+    setBottomCube(255, 50, 0);
     delay(50);
-    setMiddleCube(255, 0, 0);
-    setTopCube(20, 20, 20);
-    delay(50);    
+    setBottomCube(255, 70, 0);
+    delay(50);
+    setBottomCube(255, 80, 0);
+    delay(150);
+    setBottomCube(255, 40, 0);
+    setMiddleCube(255, 80, 0);
+    delay(50);
+    setBottomCube(255, 10, 0);
+    setMiddleCube(255, 40, 0);
+    setTopCube(255, 80, 0);
+    delay(50);
+    setMiddleCube(255, 10, 0);
+    setTopCube(255, 40, 0);
+    delay(50);
+    setTopCube(255, 10, 0);    
 }
 
 unsigned long shyRobot() {
-    static int morseIndex = 0;
+    static int morseIndex = 0; 
     constructMorseString(23);
     while(!(digitalRead(SENSOR_ONE) || digitalRead(SENSOR_TWO) || digitalRead(SENSOR_THREE) || digitalRead(SENSOR_FOUR))) {
         if(morse[morseIndex] == '1') {
-            dit(TOP_CUBE);
+            dit(shyRobotCube);
         } else if(morse[morseIndex] == '0') {
-            dah(TOP_CUBE);
+            dah(shyRobotCube);
         } else if(morse[morseIndex] == 'L') {
             delay(MORSE_LETTER_BREAK);
         }
         morseIndex++;
         if(morse[morseIndex] == 'W') {
             morseIndex = 0;
-            delay(MORSE_WORD_BREAK);
+            if(shyRobotCube > 2){
+              shyRobotCube = 2;
+            }else{
+              shyRobotCube++;
+            }
+            delay(MORSE_WORD_BREAK); 
         }
     }
     shyRobotFleesToTheHeavens();
@@ -264,8 +338,8 @@ void dit(int which_cubes) {
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
                 break;
-            case LOWER_TWO_CUBES:
-                setMiddleCube(red, green, 255);
+            case BOTTOM_CUBE:
+                //setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
                 break;
         }
@@ -282,8 +356,8 @@ void dit(int which_cubes) {
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
                 break;
-            case LOWER_TWO_CUBES:
-                setMiddleCube(red, green, 255);
+            case BOTTOM_CUBE:
+                //setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
                 break;
         }
@@ -305,8 +379,8 @@ void dah(int which_cubes) {
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
                 break;
-            case LOWER_TWO_CUBES:
-                setMiddleCube(red, green, 255);
+            case BOTTOM_CUBE:
+                //setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
                 break;
         }
@@ -323,8 +397,8 @@ void dah(int which_cubes) {
             case MIDDLE_CUBE:
                 setMiddleCube(red, green, 255);
                 break;
-            case LOWER_TWO_CUBES:
-                setMiddleCube(red, green, 255);
+            case BOTTOM_CUBE:
+                //setMiddleCube(red, green, 255);
                 setBottomCube(red, green, 255);
                 break;
         }
