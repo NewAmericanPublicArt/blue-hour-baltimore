@@ -276,28 +276,47 @@ void shyRobotFleesToTheHeavens() {
 }
 
 void fastBotFlashesYou() {
+    
     // Assume we start with all cubes red
     setBottomCube(255, 10, 0);
-    delay(50);
+    setMiddleCube(255, 0, 0);
+    setTopCube(255, 0, 0);
+    delay(90);
     setBottomCube(255, 30, 0);
-    delay(50);
+    setMiddleCube(255, 10, 0);
+    setTopCube(255, 0, 0);
+    delay(80);
     setBottomCube(255, 50, 0);
-    delay(50);
-    setBottomCube(255, 70, 0);
+    setMiddleCube(255, 30, 0);
+    setTopCube(255, 10, 0);
+    delay(70);
+    setBottomCube(255, 80, 0);
+    setMiddleCube(255, 50, 0);
+    setTopCube(255, 30, 0);
+    delay(60);
+    setBottomCube(255, 150, 0);
+    setMiddleCube(255, 80, 0);
+    setTopCube(255, 50, 0);
     delay(50);
     setBottomCube(255, 80, 0);
-    delay(150);
-    setBottomCube(255, 40, 0);
-    setMiddleCube(255, 80, 0);
-    delay(50);
-    setBottomCube(255, 10, 0);
-    setMiddleCube(255, 40, 0);
+    setMiddleCube(255, 150, 0);
     setTopCube(255, 80, 0);
-    delay(50);
+    delay(60);
+    setBottomCube(255, 30, 0);
+    setMiddleCube(255, 80, 0);
+    setTopCube(255, 150, 0);
+    delay(70);
+    setBottomCube(255, 10, 0);
+    setMiddleCube(255, 30, 0);
+    setTopCube(255, 80, 0);
+    delay(80);
+    setBottomCube(255, 0, 0);
     setMiddleCube(255, 10, 0);
-    setTopCube(255, 40, 0);
-    delay(50);
-    setTopCube(255, 10, 0);    
+    setTopCube(255, 30, 0);
+    delay(90);
+    setBottomCube(255, 0, 0);
+    setMiddleCube(255, 0, 0);
+    setTopCube(255, 10, 0);     
 }
 
 unsigned long shyRobot() {
